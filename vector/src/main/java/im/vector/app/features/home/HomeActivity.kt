@@ -24,12 +24,12 @@ import android.os.Bundle
 import android.os.Parcelable
 import android.view.Menu
 import android.view.MenuItem
-import com.google.android.material.appbar.MaterialToolbar
 import androidx.core.view.GravityCompat
 import androidx.core.view.isVisible
 import androidx.drawerlayout.widget.DrawerLayout
 import com.airbnb.mvrx.MvRx
 import com.airbnb.mvrx.viewModel
+import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import im.vector.app.AppStateHandler
 import im.vector.app.R
@@ -58,6 +58,7 @@ import im.vector.app.features.rageshake.ReportType
 import im.vector.app.features.rageshake.VectorUncaughtExceptionHandler
 import im.vector.app.features.settings.VectorPreferences
 import im.vector.app.features.settings.VectorSettingsActivity
+import im.vector.app.features.spaces.RestrictedPromoBottomSheet
 import im.vector.app.features.spaces.SpaceCreationActivity
 import im.vector.app.features.spaces.SpacePreviewActivity
 import im.vector.app.features.spaces.SpaceSettingsMenuBottomSheet
@@ -89,6 +90,7 @@ class HomeActivity :
         UnknownDeviceDetectorSharedViewModel.Factory,
         ServerBackupStatusViewModel.Factory,
         UnreadMessagesSharedViewModel.Factory,
+        PromoteRestrictedViewModel.Factory,
         NavigationInterceptor,
         SpaceInviteBottomSheet.InteractionListener {
 
@@ -99,6 +101,8 @@ class HomeActivity :
 
     private val serverBackupStatusViewModel: ServerBackupStatusViewModel by viewModel()
     @Inject lateinit var serverBackupviewModelFactory: ServerBackupStatusViewModel.Factory
+    @Inject lateinit var promoteRestrictedViewModelFactory: PromoteRestrictedViewModel.Factory
+    private val promoteRestrictedViewModel: PromoteRestrictedViewModel by viewModel()
 
     @Inject lateinit var activeSessionHolder: ActiveSessionHolder
     @Inject lateinit var vectorUncaughtExceptionHandler: VectorUncaughtExceptionHandler
@@ -171,18 +175,13 @@ class HomeActivity :
             replaceFragment(R.id.homeDrawerFragmentContainer, HomeDrawerFragment::class.java)
         }
 
-//        appStateHandler.selectedRoomGroupingObservable.subscribe {
-//            if (supportFragmentManager.getFragment())
-//            replaceFragment(R.id.homeDetailFragmentContainer, HomeDetailFragment::class.java, allowStateLoss = true)
-//        }.disposeOnDestroy()
-
         sharedActionViewModel
                 .observe()
                 .subscribe { sharedAction ->
                     when (sharedAction) {
-                        is HomeActivitySharedAction.OpenDrawer -> views.drawerLayout.openDrawer(GravityCompat.START)
-                        is HomeActivitySharedAction.CloseDrawer -> views.drawerLayout.closeDrawer(GravityCompat.START)
-                        is HomeActivitySharedAction.OpenGroup -> {
+                        is HomeActivitySharedAction.OpenDrawer        -> views.drawerLayout.openDrawer(GravityCompat.START)
+                        is HomeActivitySharedAction.CloseDrawer       -> views.drawerLayout.closeDrawer(GravityCompat.START)
+                        is HomeActivitySharedAction.OpenGroup         -> {
                             views.drawerLayout.closeDrawer(GravityCompat.START)
 
                             // Temporary
@@ -196,10 +195,10 @@ class HomeActivity :
                             // we might want to delay that to avoid having the drawer animation lagging
                             // would be probably better to let the drawer do that? in the on closed callback?
                         }
-                        is HomeActivitySharedAction.OpenSpacePreview -> {
+                        is HomeActivitySharedAction.OpenSpacePreview  -> {
                             startActivity(SpacePreviewActivity.newIntent(this, sharedAction.spaceId))
                         }
-                        is HomeActivitySharedAction.AddSpace -> {
+                        is HomeActivitySharedAction.AddSpace          -> {
                             createSpaceResultLauncher.launch(SpaceCreationActivity.newIntent(this))
                         }
                         is HomeActivitySharedAction.ShowSpaceSettings -> {
@@ -212,11 +211,11 @@ class HomeActivity :
                                     })
                                     .show(supportFragmentManager, "SPACE_SETTINGS")
                         }
-                        is HomeActivitySharedAction.OpenSpaceInvite -> {
+                        is HomeActivitySharedAction.OpenSpaceInvite   -> {
                             SpaceInviteBottomSheet.newInstance(sharedAction.spaceId)
                                     .show(supportFragmentManager, "SPACE_INVITE")
                         }
-                        HomeActivitySharedAction.SendSpaceFeedBack -> {
+                        HomeActivitySharedAction.SendSpaceFeedBack    -> {
                             bugReporter.openBugReportScreen(this, ReportType.SPACE_BETA_FEEDBACK)
                         }
                     }.exhaustive
@@ -232,15 +231,30 @@ class HomeActivity :
         homeActivityViewModel.observeViewEvents {
             when (it) {
                 is HomeActivityViewEvents.AskPasswordToInitCrossSigning -> handleAskPasswordToInitCrossSigning(it)
-                is HomeActivityViewEvents.OnNewSession -> handleOnNewSession(it)
-                HomeActivityViewEvents.PromptToEnableSessionPush -> handlePromptToEnablePush()
-                is HomeActivityViewEvents.OnCrossSignedInvalidated -> handleCrossSigningInvalidated(it)
+                is HomeActivityViewEvents.OnNewSession                  -> handleOnNewSession(it)
+                HomeActivityViewEvents.PromptToEnableSessionPush        -> handlePromptToEnablePush()
+                is HomeActivityViewEvents.OnCrossSignedInvalidated      -> handleCrossSigningInvalidated(it)
             }.exhaustive
         }
         homeActivityViewModel.subscribe(this) { renderState(it) }
 
         shortcutsHandler.observeRoomsAndBuildShortcuts()
                 .disposeOnDestroy()
+
+        if (!vectorPreferences.didPromoteNewRestrictedFeature()) {
+            promoteRestrictedViewModel.subscribe(this) {
+                if (it.activeSpaceSummary != null && !it.activeSpaceSummary.isPublic
+                        && it.activeSpaceSummary.otherMemberIds.isNotEmpty()) {
+                    // It's a private space with some members show this once
+                    if (it.canUserManageSpace && !popupAlertManager.hasAlertsToShow()) {
+                        if (!vectorPreferences.didPromoteNewRestrictedFeature()) {
+                            vectorPreferences.setDidPromoteNewRestrictedFeature()
+                            RestrictedPromoBottomSheet().show(supportFragmentManager, "FOO")
+                        }
+                    }
+                }
+            }
+        }
 
         if (isFirstCreation()) {
             handleIntent(intent)
@@ -287,7 +301,7 @@ class HomeActivity :
 
     private fun renderState(state: HomeActivityViewState) {
         when (val status = state.initialSyncProgressServiceStatus) {
-            is InitialSyncProgressService.Status.Idle -> {
+            is InitialSyncProgressService.Status.Idle        -> {
                 views.waitingView.root.isVisible = false
             }
             is InitialSyncProgressService.Status.Progressing -> {
@@ -451,15 +465,15 @@ class HomeActivity :
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
-            R.id.menu_home_suggestion -> {
+            R.id.menu_home_suggestion          -> {
                 bugReporter.openBugReportScreen(this, ReportType.SUGGESTION)
                 return true
             }
-            R.id.menu_home_report_bug -> {
+            R.id.menu_home_report_bug          -> {
                 bugReporter.openBugReportScreen(this, ReportType.BUG_REPORT)
                 return true
             }
-            R.id.menu_home_init_sync_legacy -> {
+            R.id.menu_home_init_sync_legacy    -> {
                 // Configure the SDK
                 initialSyncStrategy = InitialSyncStrategy.Legacy
                 // And clear cache
@@ -473,11 +487,11 @@ class HomeActivity :
                 MainActivity.restartApp(this, MainActivityArgs(clearCache = true))
                 return true
             }
-            R.id.menu_home_filter -> {
+            R.id.menu_home_filter              -> {
                 navigator.openRoomsFiltering(this)
                 return true
             }
-            R.id.menu_home_setting -> {
+            R.id.menu_home_setting             -> {
                 navigator.openSettings(this)
                 return true
             }
@@ -548,4 +562,6 @@ class HomeActivity :
         private const val ROOM_LINK_PREFIX = "${MATRIX_TO_CUSTOM_SCHEME_URL_BASE}room/"
         private const val USER_LINK_PREFIX = "${MATRIX_TO_CUSTOM_SCHEME_URL_BASE}user/"
     }
+
+    override fun create(initialState: ActiveSpaceViewState) = promoteRestrictedViewModelFactory.create(initialState)
 }

@@ -385,6 +385,7 @@
     <string name="dismiss">Dismiss</string>
     <string name="reset">Reset</string>
     <string name="start_chatting">Start Chatting</string>
+    <string name="learn_more">Learn More</string>
 
 
     <!-- First param will be replace by the value of ongoing_conference_call_voice, and second one by the value of ongoing_conference_call_video -->
@@ -3450,4 +3451,10 @@
     <string name="upgrade_room_for_restricted_no_param">Anyone in a parent space will be able to find and join this room - no need to manually invite everyone.  You’ll be able to change this in room settings anytime.</string>
 
     <string name="upgrade_room_for_restricted_note">Please note upgrading will make a new version of the room.  All current messages will stay in this archived room.</string>
+
+    <string name="new_let_people_in_spaces_find_and_join">New: Let people in spaces find and join private rooms</string>
+    <string name="help_people_in_spaces_find_and_join">Help people in spaces to find and join private rooms themselves, no need to manually invite everyone.</string>
+    <string name="this_makes_it_easy_for_rooms_to_stay_private_to_a_space">This makes it easy for rooms to stay private to a space, while letting people in the space find and join them.  All new rooms in a space will have this option available.</string>
+    <string name="help_space_members">Help space members find private rooms</string>
+    <string name="to_help_space_members_find_and_join">To help space members find and join a private room, go to that room’s settings by tapping on the avatar.</string>
 </resources>

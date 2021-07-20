@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- https://www.figma.com/file/HOGxCoUWoedha639SjD90n/%5BBeta%5D-Restricted-room-access?node-id=107%3A61157 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?colorSurface"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="start"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="12dp"
+        android:importantForAccessibility="no"
+        android:src="@drawable/ic_beta_pill" />
+
+    <TextView
+        style="@style/Widget.Vector.TextView.Title"
+        android:id="@+id/title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="12dp"
+        android:gravity="start"
+        tools:text="@string/new_let_people_in_spaces_find_and_join"
+        android:textColor="?vctr_content_primary"
+        android:textStyle="bold" />
+
+    <TextView
+        style="@style/Widget.Vector.TextView.Body"
+        android:id="@+id/topDescription"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="20dp"
+        android:gravity="start"
+        android:textColor="?vctr_content_secondary"
+        tools:text="@string/help_people_in_spaces_find_and_join" />
+
+
+    <ImageView
+        android:id="@+id/imageHint"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:importantForAccessibility="no"
+        android:maxWidth="300dp"
+        android:src="@drawable/room_settings"
+        android:visibility="gone"
+        tools:visibility="visible" />
+
+    <TextView
+        style="@style/Widget.Vector.TextView.Body"
+        android:id="@+id/bottomDescription"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:gravity="start"
+        android:text="@string/this_makes_it_easy_for_rooms_to_stay_private_to_a_space"
+        android:textColor="?vctr_content_secondary"
+        android:visibility="gone"
+        tools:visibility="visible" />
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/layout_vertical_margin"
+        android:gravity="end"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/skipButton"
+            style="@style/Widget.Vector.Button.Text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="16dp"
+            android:text="@string/skip"
+            android:textAllCaps="true" />
+
+        <Button
+            android:id="@+id/learnMore"
+            style="@style/Widget.Vector.Button.Positive"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/learn_more"
+            android:textAllCaps="true" />
+    </LinearLayout>
+
+
+</LinearLayout>

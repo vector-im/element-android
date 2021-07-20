@@ -187,6 +187,7 @@ class VectorPreferences @Inject constructor(private val context: Context) {
         private const val SETTINGS_DISPLAY_ALL_EVENTS_KEY = "SETTINGS_DISPLAY_ALL_EVENTS_KEY"
 
         private const val DID_ASK_TO_ENABLE_SESSION_PUSH = "DID_ASK_TO_ENABLE_SESSION_PUSH"
+        private const val DID_PROMOTE_NEW_RESTRICTED_JOIN_RULE = "DID_PROMOTE_NEW_RESTRICTED_JOIN_RULE"
 
         private const val MEDIA_SAVING_3_DAYS = 0
         private const val MEDIA_SAVING_1_WEEK = 1
@@ -341,6 +342,16 @@ class VectorPreferences @Inject constructor(private val context: Context) {
     fun setDidAskUserToEnableSessionPush() {
         defaultPrefs.edit {
             putBoolean(DID_ASK_TO_ENABLE_SESSION_PUSH, true)
+        }
+    }
+
+    fun didPromoteNewRestrictedFeature(): Boolean {
+        return defaultPrefs.getBoolean(DID_PROMOTE_NEW_RESTRICTED_JOIN_RULE, false)
+    }
+
+    fun setDidPromoteNewRestrictedFeature() {
+        defaultPrefs.edit {
+            putBoolean(DID_PROMOTE_NEW_RESTRICTED_JOIN_RULE, true)
         }
     }
 
