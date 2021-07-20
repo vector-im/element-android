@@ -5,8 +5,12 @@ buildscript {
     ext.kotlin_version = '1.5.21'
     ext.kotlin_coroutines_version = "1.5.0"
     repositories {
+        maven {
+            url "https://www.jitpack.io"
+        }
         google()
-        jcenter()
+        // deprecated
+//        jcenter()
         maven {
             url "https://plugins.gradle.org/m2/"
         }
@@ -59,8 +63,10 @@ allprojects {
         }
         google()
         mavenCentral()
+        // deprecated but have to use
         jcenter()
     }
+
 
     tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
         // Warnings are potential errors, so stop ignoring them
