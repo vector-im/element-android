@@ -15,8 +15,9 @@
  */
 package org.matrix.android.sdk.internal.session.pushers
 
+import org.matrix.android.sdk.api.pushrules.Action
 import org.matrix.android.sdk.api.pushrules.RuleKind
-import org.matrix.android.sdk.api.pushrules.rest.PushRule
+import org.matrix.android.sdk.api.pushrules.toJson
 import org.matrix.android.sdk.internal.network.GlobalErrorReceiver
 import org.matrix.android.sdk.internal.network.executeRequest
 import org.matrix.android.sdk.internal.task.Task
@@ -25,8 +26,9 @@ import javax.inject.Inject
 internal interface UpdatePushRuleActionsTask : Task<UpdatePushRuleActionsTask.Params, Unit> {
     data class Params(
             val kind: RuleKind,
-            val oldPushRule: PushRule,
-            val newPushRule: PushRule
+            val ruleId: String,
+            val enable: Boolean,
+            val actions: List<Action>?
     )
 }
 
@@ -36,20 +38,14 @@ internal class DefaultUpdatePushRuleActionsTask @Inject constructor(
 ) : UpdatePushRuleActionsTask {
 
     override suspend fun execute(params: UpdatePushRuleActionsTask.Params) {
-        if (params.oldPushRule.enabled != params.newPushRule.enabled) {
-            // First change enabled state
             executeRequest(globalErrorReceiver) {
-                pushRulesApi.updateEnableRuleStatus(params.kind.value, params.newPushRule.ruleId, params.newPushRule.enabled)
+                pushRulesApi.updateEnableRuleStatus(params.kind.value, params.ruleId, enable = params.enable)
             }
-        }
-
-        if (params.newPushRule.enabled) {
-            // Also ensure the actions are up to date
-            val body = mapOf("actions" to params.newPushRule.actions)
-
-            executeRequest(globalErrorReceiver) {
-                pushRulesApi.updateRuleActions(params.kind.value, params.newPushRule.ruleId, body)
+            if (params.actions != null) {
+                val body = mapOf("actions" to params.actions.toJson())
+                executeRequest(globalErrorReceiver) {
+                    pushRulesApi.updateRuleActions(params.kind.value, params.ruleId, body)
+                }
             }
-        }
     }
 }

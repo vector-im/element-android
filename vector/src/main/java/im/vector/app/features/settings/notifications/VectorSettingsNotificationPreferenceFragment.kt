@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 New Vector Ltd
+ * Copyright (c) 2021 New Vector Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package im.vector.app.features.settings
+package im.vector.app.features.settings.notifications
 
 import android.app.Activity
 import android.content.Context
@@ -37,6 +37,11 @@ import im.vector.app.core.pushers.PushersManager
 import im.vector.app.core.utils.isIgnoringBatteryOptimizations
 import im.vector.app.core.utils.requestDisablingBatteryOptimization
 import im.vector.app.features.notifications.NotificationUtils
+import im.vector.app.features.settings.BackgroundSyncMode
+import im.vector.app.features.settings.BackgroundSyncModeChooserDialog
+import im.vector.app.features.settings.VectorPreferences
+import im.vector.app.features.settings.VectorSettingsBaseFragment
+import im.vector.app.features.settings.VectorSettingsFragmentInteractionListener
 import im.vector.app.push.fcm.FcmHelper
 import kotlinx.coroutines.launch
 import org.matrix.android.sdk.api.extensions.tryOrNull

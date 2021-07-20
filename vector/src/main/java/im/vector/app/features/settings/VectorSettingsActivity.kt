@@ -27,6 +27,7 @@ import im.vector.app.core.extensions.replaceFragment
 import im.vector.app.core.platform.VectorBaseActivity
 import im.vector.app.databinding.ActivityVectorSettingsBinding
 import im.vector.app.features.settings.devices.VectorSettingsDevicesFragment
+import im.vector.app.features.settings.notifications.VectorSettingsNotificationPreferenceFragment
 
 import org.matrix.android.sdk.api.failure.GlobalError
 import org.matrix.android.sdk.api.session.Session

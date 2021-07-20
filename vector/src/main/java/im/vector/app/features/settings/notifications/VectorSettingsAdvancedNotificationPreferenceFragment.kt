@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 New Vector Ltd
+ * Copyright (c) 2021 New Vector Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,17 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package im.vector.app.features.settings
+package im.vector.app.features.settings.notifications
 
 import androidx.lifecycle.lifecycleScope
 import androidx.preference.Preference
 import im.vector.app.R
+import im.vector.app.core.preference.PushRulePreference.NotificationIndex
 import im.vector.app.core.preference.PushRulePreference
 import im.vector.app.core.preference.VectorPreference
 import im.vector.app.core.utils.toast
+import im.vector.app.features.settings.VectorSettingsBaseFragment
 import kotlinx.coroutines.launch
 import org.matrix.android.sdk.api.pushrules.RuleIds
+import org.matrix.android.sdk.api.pushrules.rest.PushRule
 import org.matrix.android.sdk.api.pushrules.rest.PushRuleAndKind
+import org.matrix.android.sdk.api.pushrules.toJson
 import javax.inject.Inject
 
 class VectorSettingsAdvancedNotificationPreferenceFragment @Inject constructor()
@@ -45,24 +49,29 @@ class VectorSettingsAdvancedNotificationPreferenceFragment @Inject constructor()
                     preference.isVisible = false
                 } else {
                     preference.isVisible = true
-                    preference.setPushRule(ruleAndKind)
+                    val initialIndex = getNotificationIndexForRule(ruleAndKind.pushRule)
+                    preference.setIndex(initialIndex)
                     preference.onPreferenceChangeListener = Preference.OnPreferenceChangeListener { _, newValue ->
-                        val newRule = preference.createNewRule(newValue as Int)
-                        if (newRule != null) {
+                        val newIndex = newValue as NotificationIndex
+                        val standardAction = getStandardAction(ruleAndKind.pushRule.ruleId, newIndex)
+                        if (standardAction != null) {
+                            val enabled = standardAction != StandardActions.Disabled
+                            val newActions = standardAction.actions
                             displayLoadingView()
 
                             lifecycleScope.launch {
                                 val result = runCatching {
                                     session.updatePushRuleActions(ruleAndKind.kind,
-                                            preference.ruleAndKind?.pushRule ?: ruleAndKind.pushRule,
-                                            newRule)
+                                            ruleAndKind.pushRule.ruleId,
+                                            enabled,
+                                            newActions)
                                 }
                                 if (!isAdded) {
                                     return@launch
                                 }
                                 hideLoadingView()
                                 result.onSuccess {
-                                    preference.setPushRule(ruleAndKind.copy(pushRule = newRule))
+                                    preference.setIndex(newIndex)
                                 }
                                 result.onFailure { failure ->
                                     // Restore the previous value
@@ -76,6 +85,28 @@ class VectorSettingsAdvancedNotificationPreferenceFragment @Inject constructor()
                 }
             }
         }
+    }
+
+    private fun getNotificationIndexForRule(rule: PushRule): NotificationIndex? {
+        return NotificationIndex.values().firstOrNull {
+            // Get the actions for the index
+            val standardAction = getStandardAction(rule.ruleId, it) ?: return@firstOrNull false
+            val indexActions = standardAction.actions ?: listOf()
+            // Check if the input rule matches a rule generated from the static rule definitions
+            val targetRule = rule.copy(enabled = standardAction != StandardActions.Disabled, actions = indexActions.toJson())
+            ruleMatches(rule, targetRule)
+        }
+    }
+
+    private fun ruleMatches(rule: PushRule, targetRule: PushRule): Boolean {
+        // Rules match if both are disabled, or if both are enabled and their highlight/sound/notify actions match up.
+        return (!rule.enabled && !targetRule.enabled)
+                || (rule.enabled
+                        && targetRule.enabled
+                        && rule.getHighlight() == targetRule.getHighlight()
+                        && rule.getNotificationSound() == targetRule.getNotificationSound()
+                        && rule.shouldNotify() == targetRule.shouldNotify()
+                        && rule.shouldNotNotify() == targetRule.shouldNotNotify())
     }
 
     private fun refreshDisplay() {

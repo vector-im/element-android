@@ -113,8 +113,8 @@ internal class DefaultPushRuleService @Inject constructor(
         addPushRuleTask.execute(AddPushRuleTask.Params(kind, pushRule))
     }
 
-    override suspend fun updatePushRuleActions(kind: RuleKind, oldPushRule: PushRule, newPushRule: PushRule) {
-        updatePushRuleActionsTask.execute(UpdatePushRuleActionsTask.Params(kind, oldPushRule, newPushRule))
+    override suspend fun updatePushRuleActions(kind: RuleKind, ruleId: String, enable: Boolean, actions: List<Action>?) {
+        updatePushRuleActionsTask.execute(UpdatePushRuleActionsTask.Params(kind, ruleId, enable, actions))
     }
 
     override suspend fun removePushRule(kind: RuleKind, pushRule: PushRule) {

@@ -16,7 +16,7 @@
     <im.vector.app.core.preference.VectorPreference
         android:icon="@drawable/ic_settings_root_notification"
         android:title="@string/settings_notifications"
-        app:fragment="im.vector.app.features.settings.VectorSettingsNotificationPreferenceFragment" />
+        app:fragment="im.vector.app.features.settings.notifications.VectorSettingsNotificationPreferenceFragment" />
 
     <im.vector.app.core.preference.VectorPreference
         android:icon="@drawable/ic_settings_root_preferences"
